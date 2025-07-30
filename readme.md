@@ -52,7 +52,7 @@ client/      # Vite + React frontend
 
 | Method | Endpoint          | Payload / Query                     | Description                  |
 |--------|-------------------|-------------------------------------|------------------------------|
-| GET    | `/get-media`      | `?page=1&limit=10`                 | Get paginated media list     |
+| GET    | `/get-media`      | `?page=1&limit=10&search=term&type=Movie`                 | Get paginated media list , filter and search     |
 | GET    | `/media`          | `?mediaId=1`                       | Get single media by ID       |
 | POST   | `/add-media`      | FormData with media fields + poster | Add new media entry          |
 | PUT    | `/update-media`   | FormData or JSON with updated fields| Update media                 |
@@ -120,4 +120,4 @@ interface Media {
 
 - Infinite scroll adapts to screen size (mobile = 1 item)
 - Zod schemas validate request bodies and query params
-- Image uploads bypass next-cloudinary and use raw API calls
+- Image uploads on cloudinary and use raw API calls
