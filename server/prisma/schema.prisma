@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum MediaType {
+  Movie
+  TVshow
+}
+
+model User {
+  userId        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String   
+  avatarUrl String?  
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  media     Media[]  
+}
+
+model Media {
+  mediaId        Int        @id @default(autoincrement())
+  title     String
+  type      MediaType
+  director  String
+  budget    String
+  location  String
+  duration  String
+  year      String
+  posterUrl String?     
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  userId    Int
+  user      User        @relation(fields: [userId], references: [userId])
+}
