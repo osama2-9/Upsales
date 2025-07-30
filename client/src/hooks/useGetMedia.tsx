@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { axiosInstance } from "../api/axios";
 import { Media, Pagination } from "@/types/Media";
 
@@ -9,20 +9,33 @@ interface GetMediaResponse {
 }
 
 export const useGetMedia = () => {
-  const [isLargeScreen, setIsLargeScreen] = useState(false);
-  const LIMIT = isLargeScreen ? 5 : 1; 
+  const [isLargeScreen, setIsLargeScreen] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 1024 : false
+  );
+
+  const LIMIT = isLargeScreen ? 10 : 5; // Increased for better UX
+
+  const checkScreenSize = useCallback(() => {
+    setIsLargeScreen(window.innerWidth >= 1024);
+  }, []);
 
   useEffect(() => {
-    const checkScreenSize = () => {
-      setIsLargeScreen(window.innerWidth >= 1024); 
-    };
+    if (typeof window === "undefined") return;
 
     checkScreenSize();
 
-    window.addEventListener('resize', checkScreenSize);
+    let timeoutId: NodeJS.Timeout;
+    const debouncedResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkScreenSize, 150);
+    };
 
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
+    window.addEventListener("resize", debouncedResize);
+    return () => {
+      window.removeEventListener("resize", debouncedResize);
+      clearTimeout(timeoutId);
+    };
+  }, [checkScreenSize]);
 
   const {
     data,
@@ -32,42 +45,67 @@ export const useGetMedia = () => {
     hasNextPage,
     isFetchingNextPage,
     refetch,
+    isError,
+    isRefetching,
   } = useInfiniteQuery<GetMediaResponse>({
-    queryKey: ["media", isLargeScreen], 
+    queryKey: ["media", LIMIT], 
     queryFn: async ({ pageParam = 1 }) => {
-      const response = await axiosInstance.get<GetMediaResponse>(
-        "/media/get-media",
-        {
-          params: {
-            page: pageParam,
-            limit: LIMIT
+      try {
+        const response = await axiosInstance.get<GetMediaResponse>(
+          "/media/get-media",
+          {
+            params: {
+              page: pageParam,
+              limit: LIMIT,
+            },
           }
-        }
-      );
-      return response.data;
+        );
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching media:", error);
+        throw error;
+      }
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       const { page, totalPages } = lastPage.pagination;
-      return Number(page) < totalPages ? Number(page) + 1 : undefined;
+      const currentPage = Number(page);
+      const totalPagesNum = Number(totalPages);
+
+      return currentPage < totalPagesNum ? currentPage + 1 : undefined;
     },
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000, 
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   useEffect(() => {
-    refetch();
-  }, [isLargeScreen, refetch]);
+    if (data && data.pages.length > 0) {
+      refetch();
+    }
+  }, [LIMIT, refetch, data]);
 
   const media = data?.pages.flatMap((page) => page.data) || [];
 
+  const totalCount = data?.pages[0]?.pagination?.total || 0;
+
+  const currentPagination = data?.pages[data.pages.length - 1]?.pagination;
+
   return {
     media,
+    totalCount,
+    currentPagination,
     isLoading,
+    isError,
     error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLargeScreen, // Expose screen size info if needed by component
+    isRefetching,
+    refetch,
+    isLargeScreen,
+    limit: LIMIT,
   };
 };

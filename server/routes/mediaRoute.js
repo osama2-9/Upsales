@@ -12,7 +12,7 @@ import { validate } from "../middlewares/zodValidate.js";
 import {
   deleteMediaSchema,
   getMediaByIdSchema,
-  MediaSchema,
+  addMediaSchema,
   updateMediaSchema,
 } from "../validators/mediaValidator.js";
 
@@ -22,7 +22,7 @@ router.post(
   "/add-media",
   verifyCookie,
   verifyAdmin,
-  validate(MediaSchema),
+  validate(addMediaSchema),
   addNewMedia
 );
 router.put(

@@ -13,7 +13,7 @@ import {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: () => void;
-    initialValues?: Media;
+    initialValues?: Media ;
     loading?: boolean;
   }
   

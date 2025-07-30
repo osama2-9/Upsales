@@ -13,8 +13,6 @@ export const addNewMedia = async (req, res) => {
       posterUrl,
     } = req.body;
 
-    
-
     const media = await prisma.media.create({
       data: {
         title,
@@ -145,20 +143,34 @@ export const deleteMedia = async (req, res) => {
 
 export const getMedia = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, search = "", type = "" } = req.query;
+
     const pageInt = parseInt(page);
     const limitInt = parseInt(limit);
     const skip = (pageInt - 1) * limitInt;
 
-    const total = await prisma.media.count();
+    const where = {};
+
+    if (search) {
+      where.title = {
+        contains: search,
+      };
+    }
+
+    if (type) {
+      where.type = type;
+    }
+
+    const total = await prisma.media.count({ where });
 
     const media = await prisma.media.findMany({
+      where,
       skip,
       take: limitInt,
       orderBy: {
         createdAt: "desc",
       },
-      select:{
+      select: {
         mediaId: true,
         title: true,
         director: true,
@@ -175,7 +187,7 @@ export const getMedia = async (req, res) => {
         year: true,
         createdAt: true,
         updatedAt: true,
-      }
+      },
     });
 
     res.status(200).json({
@@ -183,13 +195,15 @@ export const getMedia = async (req, res) => {
       data: media,
       pagination: {
         total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        page: pageInt,
+        limit: limitInt,
+        totalPages: Math.ceil(total / limitInt),
       },
     });
   } catch (error) {
+    console.error("Error fetching media:", error);
     res.status(500).json({
+      success: false,
       message: "Internal server error",
     });
   }

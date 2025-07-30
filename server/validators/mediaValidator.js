@@ -1,14 +1,18 @@
 import { z } from "zod";
 
-export const MediaSchema = z.object({
-  title: z.string().trim().min(1, "Title is required"),
-  type: z.enum(["Movie", "TVshow"], { required_error: "Type is required" }),
-  director: z.string().trim().min(1, "Director is required"),
-  duration: z.string().trim(),
-  budget: z.string().trim().min(1, "Budget is required"),
-  location: z.string().trim().min(1, "Location is required"),
-  year: z.string().trim().min(4, "Year is required"),
-  userId: z.coerce.number().int().positive("User ID must be a positive number"),
+export const addMediaSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  type: z.string().min(1, "Type is required"),
+  director: z.string().min(1, "Director is required"),
+  duration: z.string().min(1, "Duration is required"),
+  budget: z.string().min(1, "Budget is required"),
+  location: z.string().min(1, "Location is required"),
+  year: z.string().min(1, "Year is required"),
+  userId: z.number().int().positive("User ID must be a positive integer"),
+  posterUrl: z
+    .string()
+    .url("Poster URL must be a valid URL")
+    .min(1, "Poster URL is required"),
 });
 export const updateMediaSchema = z.object({
   mediaId: z.number().int(),

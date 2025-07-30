@@ -7,12 +7,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { axiosInstance } from "@/api/axios";
 import { toast } from "sonner";
 import { useUser } from "@/recoil/useUser";
-
 export const AddNewMedia = () => {
   const navigate = useNavigate();
   const { getUserAtom } = useUser();
   const user = getUserAtom();
-  
+ 
+
   const [formData, setFormData] = useState({
     title: "",
     type: "",
@@ -22,26 +22,28 @@ export const AddNewMedia = () => {
     location: "",
     year: "",
     userId: user?.userId,
-    posterUrl: ""
+    posterUrl: "",
   });
-  
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  
+
   const cloudinaryUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
   const cloudinaryCloude = import.meta.env.VITE_CLOUDE_NAME;
   const cloudinaryUploadPreset = import.meta.env.VITE_UPLOAD_PRESET;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     if (errors[name]) {
-      setErrors(prev => {
+      setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[name];
         return newErrors;
@@ -59,7 +61,7 @@ export const AddNewMedia = () => {
       location: "",
       year: "",
       userId: user?.userId,
-      posterUrl: ""
+      posterUrl: "",
     });
     setErrors({});
     setServerError("");
@@ -69,13 +71,21 @@ export const AddNewMedia = () => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     const requiredFields = [
-      "title", "type", "director", "duration", 
-      "budget", "location", "year"
+      "title",
+      "type",
+      "director",
+      "duration",
+      "budget",
+      "location",
+      "year",
+      "posterUrl",
     ];
 
-    requiredFields.forEach(field => {
+    requiredFields.forEach((field) => {
       if (!formData[field as keyof typeof formData]) {
-        newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
+        newErrors[field] = `${
+          field.charAt(0).toUpperCase() + field.slice(1)
+        } is required`;
       }
     });
 
@@ -86,65 +96,37 @@ export const AddNewMedia = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Please select a valid image file (JPEG, JPG, PNG, WebP)");
-      return;
-    }
-
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      toast.error("File size must be less than 5MB");
-      return;
-    }
+    if (!file || !formData) return;
 
     setUploading(true);
-    const uploadFormData = new FormData();
-    uploadFormData.append("file", file);
-    uploadFormData.append("upload_preset", cloudinaryUploadPreset);
+    const formDataUpload = new FormData();
+    formDataUpload.append("file", file);
+    formDataUpload.append("upload_preset", cloudinaryUploadPreset);
 
     try {
-      
       const res = await fetch(
         `${cloudinaryUrl}/${cloudinaryCloude}/image/upload`,
-        { 
-          method: "POST", 
-          body: uploadFormData 
+        {
+          method: "POST",
+          body: formDataUpload,
         }
       );
-      
       const data = await res.json();
-      console.log(data);
-      console.log('secure_url ',data.secure_url);
+
       if (data.secure_url) {
-        setFormData(prev => ({ 
-          ...prev, 
-          posterUrl: data.secure_url
-        }));
+        setFormData({ ...formData, posterUrl: data.secure_url });
         toast.success("Image uploaded successfully");
-        
-        setErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors.posterUrl;
-          return newErrors;
-        });
       } else {
-        console.error("Upload failed:", data);
-        toast.error(data.error?.message || "Image upload failed");
+        toast.error("Upload failed");
       }
-    } catch (err) {
-      console.error("Upload error:", err);
-      toast.error("Failed to upload image");
+    } catch {
+      toast.error("Image upload failed");
     } finally {
       setUploading(false);
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -156,14 +138,8 @@ export const AddNewMedia = () => {
     }
 
     try {
-      const submitData = {
-        ...formData,
-        userId: user?.userId,
-        posterUrl: formData.posterUrl
-      };
+      const response = await axiosInstance.post("/media/add-media", formData);
 
-      const response = await axiosInstance.post("/media/add-media", submitData);
-      
       if (response.status === 201) {
         toast.success("Media created successfully");
         resetForm();
@@ -172,10 +148,11 @@ export const AddNewMedia = () => {
     } catch (error: any) {
       console.error("Error creating media:", error);
       console.error("Error response:", error.response?.data);
-      
-      const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.message || 
-                          "Failed to create media";
+
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        "Failed to create media";
       setServerError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -184,7 +161,7 @@ export const AddNewMedia = () => {
   };
 
   const removeImage = () => {
-    setFormData(prev => ({ ...prev, posterUrl: "" }));
+    setFormData((prev) => ({ ...prev, posterUrl: "" }));
     const fileInput = document.getElementById("poster") as HTMLInputElement;
     if (fileInput) {
       fileInput.value = "";
@@ -365,15 +342,15 @@ export const AddNewMedia = () => {
           {formData.posterUrl && (
             <div className="flex flex-col items-center space-y-2">
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                <img 
-                  src={formData.posterUrl} 
-                  alt="Poster preview" 
+                <img
+                  src={formData.posterUrl}
+                  alt="Poster preview"
                   className="max-h-60 max-w-full rounded-md object-contain"
                 />
               </div>
-              <Button 
+              <Button
                 type="button"
-                variant="ghost" 
+                variant="ghost"
                 size="sm"
                 onClick={removeImage}
                 className="text-red-500 hover:text-red-700"

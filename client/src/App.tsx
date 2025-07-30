@@ -13,8 +13,22 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/signup" element={<SignupForm />} />
-        <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
-        <Route path="/admin/add-new-media" element={<AdminProtectedRoute><AddNewMedia/></AdminProtectedRoute>} />
+        <Route
+          path="/admin"
+          element={
+            <AdminProtectedRoute>
+              <AdminDashboard />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/add-new-media"
+          element={
+            <AdminProtectedRoute>
+              <AddNewMedia />
+            </AdminProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );
