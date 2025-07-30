@@ -80,6 +80,7 @@ const isAdmin = user?.isAdmin
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Media Library</h1>
       <div className="flex justify-between items-center mb-6">
+            <Link className="text-blue-500 hover:text-blue-700" to="/login">Login</Link>
 
       {isAdmin && (
           <Button asChild variant="outline">
