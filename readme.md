@@ -2,8 +2,10 @@
 
 A full-stack media catalog web app with admin functionality. Built using Express.js, Prisma, MySQL, Vite, React, Tailwind CSS, TypeScript, shadcn/ui, and Cloudinary.
 
+**NOTE: I didnt implement a full authentication system, I just used JWT cookies for authentication.**
+
 ## 🌐 Live Demo
-Not yet deployed.
+[Live Demo](https://upsales.vercel.app)
 
 ## 📁 Folder Structure
 
