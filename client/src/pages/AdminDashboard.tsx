@@ -19,11 +19,12 @@ import { DeleteModal } from "@/components/admin/DeleteModal";
 import { UpdateModal } from "@/components/admin/UpdateModal";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export const AdminDashboard = () => {
     const queryClient = useQueryClient();
     const loaderRef = useRef<HTMLDivElement>(null);
-
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
     const [typeFilter, setTypeFilter] = useState(""); // Movie / TVshow / empty
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -87,11 +88,17 @@ export const AdminDashboard = () => {
         const matchesType = typeFilter ? item.type === typeFilter : true;
         return matchesSearch && matchesType;
     });
+    const handleLogout = () => {
+        axiosInstance.post("/auth/logout");
+        navigate("/login");
+        queryClient.invalidateQueries({ queryKey: ["user"] });
+    };
 
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Media Management</h1>
+                <Button className="text-blue-500 hover:text-blue-700" onClick={handleLogout}>Logout</Button>
                 <div className="flex gap-2 items-center">
                     <Input
                         placeholder="Search by title..."
