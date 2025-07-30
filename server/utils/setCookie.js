@@ -11,8 +11,8 @@ export const setCookie = (res, userId) => {
   });
   res.cookie("auth", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 24 * 60 * 60 * 1000,
+    maxAge: 1000 * 60 * 60 * 72,
+    secure: true,
+    sameSite: "None",
   });
 };
